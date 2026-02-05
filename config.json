@@ -9,6 +9,6 @@
             ]
         }
     ],
-    "check_interval_hours": 168,
+    "check_interval_hours": 72,
     "init_only": false
 }
