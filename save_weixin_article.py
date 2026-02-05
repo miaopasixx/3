@@ -456,8 +456,13 @@ class WeixinAutoMonitor:
 
                 if not feed.entries:
                     print(f"  未发现文章或 RSS 获取失败 (URL: {rss_url})")
+                    if hasattr(feed, 'status') and feed.status == 503:
+                        print("  错误: RSSHub 返回 503 (Service Unavailable)。可能是由于反爬虫拦截或内部错误。")
                     if hasattr(feed, 'headers'):
                         print(f"  响应头: {feed.headers}")
+                    # 如果是自动化模式且获取失败，抛出异常以便 GitHub Actions 捕获
+                    if self.config.get("exit_on_error", True):
+                        sys.exit(1)
                     continue
                     
                 new_articles_count = 0
