@@ -1,0 +1,15 @@
+version: '3'
+
+services:
+  wewe-rss:
+    image: cooderl/wewe-rss-sqlite:latest
+    container_name: wewe-rss
+    restart: always
+    ports:
+      - "4000:4000"
+    environment:
+      - DATABASE_TYPE=sqlite
+      - AUTH_TOKEN=123456 # 访问令牌，建议修改
+      - SERVER_ORIGIN_URL=http://localhost:4000
+    volumes:
+      - ./data:/app/data
