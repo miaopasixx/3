@@ -20,13 +20,10 @@ jobs:
           - 1200:1200
         env:
           NODE_ENV: production
-          CACHE_TYPE: redis
-          REDIS_URL: 'redis://localhost:6379/'
+          CACHE_TYPE: memory # 简化配置，避免 Redis 连接问题
           PUPPETEER_SKIP_CHROMIUM_DOWNLOAD: 'true'
-      redis:
-        image: redis:alpine
-        ports:
-          - 6379:6379
+          # 如果需要抓取微信，有时需要设置一定的延迟
+          ANTICRAWLER_DELAY: '1000'
 
     steps:
       - name: Checkout repository
