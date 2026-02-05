@@ -1,0 +1,10 @@
+{
+    "rsshub_base_url": "http://localhost:1200",
+    "accounts": [
+        {
+            "name": "济南组工",
+            "biz": "Mzg2NzgxMTMxMA=="
+        }
+    ],
+    "check_interval_hours": 6
+}

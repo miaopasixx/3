@@ -1,0 +1,62 @@
+name: Auto Sync WeChat Articles
+
+on:
+  schedule:
+    - cron: '0 */6 * * *'
+  workflow_dispatch:
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    
+    # 核心：在 GitHub Actions 环境中直接运行 RSSHub 服务
+    services:
+      rsshub:
+        image: diygod/rsshub
+        ports:
+          - 1200:1200
+        env:
+          NODE_ENV: production
+          CACHE_TYPE: redis
+          REDIS_URL: 'redis://redis:6379/'
+      redis:
+        image: redis:alpine
+        ports:
+          - 6379:6379
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+
+      - name: Wait for RSSHub to be ready
+        run: |
+          echo "Waiting for RSSHub..."
+          timeout 60s bash -c 'until curl -s http://localhost:1200 > /dev/null; do sleep 5; done'
+          echo "RSSHub is ready!"
+
+      - name: Run sync script
+        run: python save_weixin_article.py --auto
+
+      - name: Commit and Push changes
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git add .
+          if git diff --staged --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "chore: auto sync new articles [skip ci]"
+            git push
+          fi
