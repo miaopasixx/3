@@ -22,8 +22,9 @@ jobs:
           NODE_ENV: production
           CACHE_TYPE: memory
           PUPPETEER_SKIP_CHROMIUM_DOWNLOAD: 'true'
-          ANTICRAWLER_DELAY: '1000'
-          UA: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+          ANTICRAWLER_DELAY: '2000'
+          # 设置全局 UA，尝试规避拦截
+          UA: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
 
     steps:
       - name: Checkout repository
@@ -49,6 +50,7 @@ jobs:
         run: python save_weixin_article.py --auto
 
       - name: Commit and Push changes
+        if: always()
         run: |
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
