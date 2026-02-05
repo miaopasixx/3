@@ -20,10 +20,11 @@ jobs:
           - 1200:1200
         env:
           NODE_ENV: production
-          CACHE_TYPE: memory # 简化配置，避免 Redis 连接问题
+          CACHE_TYPE: memory
           PUPPETEER_SKIP_CHROMIUM_DOWNLOAD: 'true'
-          # 如果需要抓取微信，有时需要设置一定的延迟
           ANTICRAWLER_DELAY: '1000'
+          # 尝试避开某些机器人检查
+          UA: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
 
     steps:
       - name: Checkout repository
@@ -57,13 +58,13 @@ jobs:
         if: failure()
         run: |
           echo "Sync script failed, checking RSSHub logs..."
-          docker ps
-          # Get the container ID for RSSHub and show logs
-          RSSHUB_ID=$(docker ps -qf "image=diygod/rsshub")
-          if [ ! -z "$RSSHUB_ID" ]; then
-            docker logs $RSSHUB_ID | tail -n 50
-          fi
-
+          docker ps -a
+          # 获取最近启动的两个容器的日志（RSSHub 和 Redis/Memory）
+          docker logs $(docker ps -lq) || true
+          # 尝试直接获取 diygod/rsshub 的日志
+          echo "Full RSSHub logs:"
+          docker logs $(docker ps -q --filter ancestor=diygod/rsshub)
+          
       - name: Commit and Push changes
         run: |
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
