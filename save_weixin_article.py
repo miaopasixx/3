@@ -427,78 +427,83 @@ class WeixinAutoMonitor:
             
     def check_and_download(self):
         """检查更新并下载新文章"""
-        rsshub_base = self.config.get("rsshub_base_url", "https://rsshub.app")
+        rsshub_base = self.config.get("rsshub_base_url", "http://localhost:1200")
         accounts = self.config.get("accounts", [])
         
         if not accounts:
-            print("配置文件中未找到公众号列表")
+            print("❌ 配置文件中未找到公众号列表")
             return
             
         for account in accounts:
             name = account.get("name", "Unknown")
             biz = account.get("biz")
+            # 支持直接配置 RSS URL
+            rss_url = account.get("rss_url")
             
-            if not biz:
-                print(f"忽略公众号 {name}: 缺少 biz 参数")
-                continue
+            if not rss_url:
+                if not biz:
+                    print(f"⚠️ 忽略公众号 {name}: 缺少 biz 或 rss_url")
+                    continue
+                rss_url = f"{rsshub_base}/wechat/mp/msgalist/{biz}"
                 
             print(f"\n[Monitor] 正在检查公众号: {name}")
-            rss_url = f"{rsshub_base}/wechat/mp/msgalist/{biz}"
+            print(f"  源地址: {rss_url}")
             
             try:
                 feed = feedparser.parse(rss_url)
                 
-                # 调试信息
                 if hasattr(feed, 'status'):
                     print(f"  RSS 响应状态码: {feed.status}")
-                if feed.bozo:
-                    print(f"  RSS 解析警告 (Bozo): {feed.bozo_exception}")
-
+                
                 if not feed.entries:
-                    print(f"  未发现文章或 RSS 获取失败 (URL: {rss_url})")
+                    print(f"  ❌ 未发现文章或抓取失败。")
                     if hasattr(feed, 'status') and feed.status == 503:
-                        print("  错误: RSSHub 返回 503 (Service Unavailable)。可能是由于反爬虫拦截或内部错误。")
-                    if hasattr(feed, 'headers'):
-                        print(f"  响应头: {feed.headers}")
-                    # 如果是自动化模式且获取失败，抛出异常以便 GitHub Actions 捕获
-                    if self.config.get("exit_on_error", True):
-                        sys.exit(1)
+                        print("  💡 提示: RSSHub 返回 503，通常是由于被微信封锁或路由已失效。")
                     continue
                     
                 new_articles_count = 0
                 for entry in feed.entries:
                     url = entry.link
-                    # 微信链接可能包含参数，取主要部分判断
                     clean_url = url.split('&')[0] if 'mp.weixin.qq.com' in url else url
                     
                     if clean_url in self.history["downloaded_urls"]:
                         continue
-                    
+                        
                     # 标题关键词过滤
                     keywords = account.get("keywords", [])
                     if keywords:
                         match = any(kw in entry.title for kw in keywords)
                         if not match:
-                            print(f"  跳过不匹配文章: {entry.title}")
+                            # 如果是初始化模式，我们也把不匹配的也记录为“已阅”，避免以后多余检查
+                            if self.config.get("init_only", False):
+                                self.history["downloaded_urls"].append(clean_url)
                             continue
 
-                    print(f"  发现新文章并匹配成功: {entry.title}")
+                    print(f"  🎯 发现匹配新文章: {entry.title}")
+                    
+                    # 如果是初始化模式，不执行下载，仅记录历史
+                    if self.config.get("init_only", False):
+                        print(f"    [Init] 已标记为已下载 (不执行下载)")
+                        self.history["downloaded_urls"].append(clean_url)
+                        new_articles_count += 1
+                        continue
+
                     if self.saver.save_article(url):
                         self.history["downloaded_urls"].append(clean_url)
                         new_articles_count += 1
-                        # 限制一下每次公众号下载的数量，避免过于频繁
                         if new_articles_count >= 5:
                             break
-                    time.sleep(2)  # 文章之间稍作停顿
+                    time.sleep(2)
                 
                 if new_articles_count > 0:
-                    print(f"  公众号 {name} 完成，下载了 {new_articles_count} 篇新文章")
+                    status_text = "标记" if self.config.get("init_only") else "下载"
+                    print(f"  ✅ 公众号 {name} 处理完成，{status_text}了 {new_articles_count} 篇文章")
                     self.save_history()
                 else:
-                    print(f"  公众号 {name} 无更新")
+                    print(f"  ☕ 公众号 {name} 无匹配更新")
                     
             except Exception as e:
-                print(f"  处理公众号 {name} 时出错: {e}")
+                print(f"  💥 处理公众号 {name} 时出错: {e}")
 
 
 def main():

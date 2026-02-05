@@ -3,11 +3,12 @@
     "accounts": [
         {
             "name": "济南组工",
-            "biz": "Mzg2NzgxMTMxMA==",
+            "rss_url": "http://localhost:1200/wechat2rss/jnan_zg",
             "keywords": [
                 "组织生活指南"
             ]
         }
     ],
-    "check_interval_hours": 24
+    "check_interval_hours": 24,
+    "init_only": false
 }

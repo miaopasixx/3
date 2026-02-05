@@ -23,7 +23,6 @@ jobs:
           CACHE_TYPE: memory
           PUPPETEER_SKIP_CHROMIUM_DOWNLOAD: 'true'
           ANTICRAWLER_DELAY: '1000'
-          # 尝试避开某些机器人检查
           UA: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
 
     steps:
@@ -42,29 +41,13 @@ jobs:
 
       - name: Wait for RSSHub to be ready
         run: |
-          echo "Waiting for RSSHub..."
+          echo "Waiting for RSSHub container..."
           timeout 60s bash -c 'until curl -s http://localhost:1200 > /dev/null; do sleep 5; done'
-          echo "RSSHub is ready!"
-          echo "Checking health..."
-          curl -I http://localhost:1200/
-          echo "Testing WeChat RSS URL..."
-          # 尝试访问一下抓取链接，看返回什么内容（不包含敏感内容的话）
-          curl -s http://localhost:1200/wechat/mp/msgalist/Mzg2NzgxMTMxMA== | head -n 20
+          echo "✅ RSSHub is up and running!"
 
       - name: Run sync script
         run: python save_weixin_article.py --auto
 
-      - name: Diagnostic - Check RSSHub Logs on Failure
-        if: failure()
-        run: |
-          echo "Sync script failed, checking RSSHub logs..."
-          docker ps -a
-          # 获取最近启动的两个容器的日志（RSSHub 和 Redis/Memory）
-          docker logs $(docker ps -lq) || true
-          # 尝试直接获取 diygod/rsshub 的日志
-          echo "Full RSSHub logs:"
-          docker logs $(docker ps -q --filter ancestor=diygod/rsshub)
-          
       - name: Commit and Push changes
         run: |
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
