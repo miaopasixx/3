@@ -448,8 +448,16 @@ class WeixinAutoMonitor:
             try:
                 feed = feedparser.parse(rss_url)
                 
+                # 调试信息
+                if hasattr(feed, 'status'):
+                    print(f"  RSS 响应状态码: {feed.status}")
+                if feed.bozo:
+                    print(f"  RSS 解析警告 (Bozo): {feed.bozo_exception}")
+
                 if not feed.entries:
                     print(f"  未发现文章或 RSS 获取失败 (URL: {rss_url})")
+                    if hasattr(feed, 'headers'):
+                        print(f"  响应头: {feed.headers}")
                     continue
                     
                 new_articles_count = 0
@@ -460,8 +468,16 @@ class WeixinAutoMonitor:
                     
                     if clean_url in self.history["downloaded_urls"]:
                         continue
-                        
-                    print(f"  发现新文章: {entry.title}")
+                    
+                    # 标题关键词过滤
+                    keywords = account.get("keywords", [])
+                    if keywords:
+                        match = any(kw in entry.title for kw in keywords)
+                        if not match:
+                            print(f"  跳过不匹配文章: {entry.title}")
+                            continue
+
+                    print(f"  发现新文章并匹配成功: {entry.title}")
                     if self.saver.save_article(url):
                         self.history["downloaded_urls"].append(clean_url)
                         new_articles_count += 1

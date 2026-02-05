@@ -3,7 +3,10 @@
     "accounts": [
         {
             "name": "济南组工",
-            "biz": "Mzg2NzgxMTMxMA=="
+            "biz": "Mzg2NzgxMTMxMA==",
+            "keywords": [
+                "组织生活指南"
+            ]
         }
     ],
     "check_interval_hours": 24
