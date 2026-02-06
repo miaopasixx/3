@@ -271,6 +271,20 @@ class WeixinArticleSaver:
         # 获取内容的HTML字符串
         content_html = str(content_div)
         
+        # 格式化发布时间
+        formatted_time = ""
+        if publish_time:
+            try:
+                from datetime import datetime
+                dt = datetime.fromtimestamp(int(publish_time))
+                formatted_time = dt.strftime('%Y年%#m月%#d日 %H:%M')
+                # Windows上使用 %#m %#d 去除前导零，Linux上使用 %-m %-d
+                # 为了跨平台兼容，这里简单处理一下
+                if os.name != 'nt': 
+                     formatted_time = dt.strftime('%Y年%-m月%-d日 %H:%M')
+            except Exception as e:
+                print(f"时间格式化失败: {e}")
+
         # 创建新的HTML文档，保留微信原始样式
         html_template = f'''<!DOCTYPE html>
 <html lang="zh-CN">
@@ -309,6 +323,12 @@ class WeixinArticleSaver:
             text-align: center;
             line-height: 1.4;
             padding: 0 10px;
+        }}
+        .article-meta {{
+            margin-bottom: 20px;
+            text-align: center;
+            color: rgba(0,0,0,0.3);
+            font-size: 15px;
         }}
         /* 微信文章内容样式 */
         #js_content, .rich_media_content {{
@@ -359,6 +379,9 @@ class WeixinArticleSaver:
 <body>
     <div class="weixin-article-wrapper">
         <h1 class="article-title">{title}</h1>
+        <div class="article-meta">
+            {f'<em id="publish_time" class="rich_media_meta rich_media_meta_text">{formatted_time}</em>' if formatted_time else ''}
+        </div>
         <div class="article-content">
             {content_html}
         </div>
