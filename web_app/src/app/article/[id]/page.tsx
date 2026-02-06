@@ -7,25 +7,10 @@ import ArticleView from '@/components/ArticleView';
 export const dynamicParams = false;
 
 export async function generateStaticParams() {
-  const paths = getAllArticleIds();
-
-  const allIds = new Set<string>();
-
-  paths.forEach(p => {
-    const rawId = p.id;
-    allIds.add(rawId);
-    allIds.add(rawId.normalize('NFC'));
-    allIds.add(rawId.normalize('NFD'));
-    allIds.add(encodeURIComponent(rawId));
-    try {
-      const decoded = decodeURIComponent(rawId);
-      allIds.add(decoded);
-      allIds.add(decoded.normalize('NFC'));
-      allIds.add(decoded.normalize('NFD'));
-    } catch { }
-  });
-
-  return Array.from(allIds).map(id => ({ id }));
+  // Debugging: return empty array or known paths to verify function detection
+  // const paths = getAllArticleIds();
+  // ...
+  return [{ id: 'test-article-id' }];
 }
 
 export default async function Article({ params }: { params: Promise<{ id: string }> }) {
