@@ -74,12 +74,13 @@ jobs:
       - name: Check for Articles
         id: check_articles
         run: |
+          # 检查根目录下的 weixin_articles (相对于 web_app 目录)
           if [ ! -d "../weixin_articles" ] || [ -z "$(ls -A ../weixin_articles 2>/dev/null)" ]; then
             echo "missing=true" >> $GITHUB_OUTPUT
-            echo "⚠️ Articles not found at ../weixin_articles. Will fetch them."
+            echo "⚠️ Articles not found at project root. Will fetch them."
           else
             echo "missing=false" >> $GITHUB_OUTPUT
-            echo "✅ Articles found."
+            echo "✅ Articles found in root."
           fi
 
       - name: Setup Python
