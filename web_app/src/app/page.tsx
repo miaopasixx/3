@@ -25,7 +25,7 @@ export default function Home() {
               <div className="absolute -inset-1 rounded-xl bg-gradient-to-br from-yellow-300 to-red-600 opacity-75 blur transition duration-500 group-hover:opacity-100" />
               <div className="relative h-10 w-10 rounded-xl overflow-hidden bg-white shadow-xl flex items-center justify-center border border-yellow-500/30">
                 <img
-                  src="/favicon.png"
+                  src={`${process.env.NODE_ENV === 'production' ? '/3' : ''}/favicon.png`}
                   alt="Logo"
                   className="h-full w-full object-cover"
                 />
