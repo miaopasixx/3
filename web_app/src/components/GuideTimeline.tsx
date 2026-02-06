@@ -32,7 +32,7 @@ export default function GuideTimeline({ articles, year }: GuideTimelineProps) {
         Using a simple grid for "professional documentation" feel.
         The visual flow is natural Left -> Right, Top -> Bottom.
       */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
                 {months.map((month) => {
                     const article = getArticleForMonth(month);
                     const isCurrent = year === currentYear && month === currentMonth;
@@ -68,7 +68,7 @@ export default function GuideTimeline({ articles, year }: GuideTimelineProps) {
                             article={article}
                             isCurrent={isCurrent}
                             state={state}
-                            className="min-h-[180px]"
+                            className="min-h-[140px]"
                         />
                     );
                 })}
