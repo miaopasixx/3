@@ -247,14 +247,11 @@ export default function AIChatSidebar({ articleContent }: AIChatSidebarProps) {
     // Initial greeting
     useEffect(() => {
         if (loaded && messages.length === 0 && !isOcrProcessing) {
-            const hasImages = extractImageUrls(articleContent).length > 0;
-            const greeting = hasImages && ocrText
-                ? 'Hello! I have read the article content and extracted text from the images. Ask me anything about it!'
-                : 'Hello! I am your AI assistant. I have read the article content. Ask me anything about it!';
+            const greeting = '你好！我是你的 AI 助手。我已经阅读了文章内容。你可以问我任何关于它的问题！';
 
             setMessages([{ role: 'assistant', content: greeting }]);
         }
-    }, [loaded, messages.length, isOcrProcessing, ocrText, articleContent, extractImageUrls]);
+    }, [loaded, messages.length, isOcrProcessing]);
 
     const handleStop = () => {
         if (abortControllerRef.current) {
