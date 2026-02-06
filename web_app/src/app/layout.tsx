@@ -16,7 +16,12 @@ export const metadata: Metadata = {
   title: "组织生活指南 | 2026 年度指引",
   description: "规范化、标准化的党支部组织生活月度清单，汇集全年的学习重点与活动指南。",
   icons: {
-    icon: "/favicon.png",
+    icon: [
+      { url: "/favicon.png" },
+      { url: "/favicon.ico" },
+    ],
+    shortcut: "/favicon.ico",
+    apple: "/favicon.png",
   },
 };
 
