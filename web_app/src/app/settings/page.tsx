@@ -44,16 +44,16 @@ export default function SettingsPage() {
             });
 
             if (response.ok) {
-                setTestResult({ success: true, message: 'Connection successful!' });
+                setTestResult({ success: true, message: '连接成功！' });
             } else {
                 const errorData = await response.json().catch(() => ({}));
                 setTestResult({
                     success: false,
-                    message: `Error ${response.status}: ${errorData.message || response.statusText}`
+                    message: `错误 ${response.status}: ${errorData.message || response.statusText}`
                 });
             }
         } catch (error: any) {
-            setTestResult({ success: false, message: `Failed: ${error.message}` });
+            setTestResult({ success: false, message: `连接失败: ${error.message}` });
         } finally {
             setIsTesting(false);
         }
@@ -137,9 +137,9 @@ export default function SettingsPage() {
                 } catch (e) { /* ignore */ }
             }
 
-            if (!fullResponse) setChatResponse('(No response)');
+            if (!fullResponse) setChatResponse('(无回复)');
         } catch (error: any) {
-            setChatResponse(`Error: ${error.message}`);
+            setChatResponse(`错误: ${error.message}`);
         } finally {
             setIsChatting(false);
         }
@@ -165,22 +165,23 @@ export default function SettingsPage() {
     return (
         <div className="min-h-screen bg-zinc-50 dark:bg-black">
             <header className="sticky top-0 z-10 flex h-16 items-center border-b border-zinc-200 bg-white/80 px-6 backdrop-blur-md dark:border-zinc-800 dark:bg-zinc-900/80">
-                <div className="mx-auto flex w-full max-w-2xl items-center gap-4">
+                <div className="w-full flex items-center">
                     <Link
                         href="/"
                         className="flex items-center gap-2 text-sm font-medium text-zinc-600 transition-colors hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100"
                     >
                         <ArrowLeft size={18} />
-                        Back
+                        返回
                     </Link>
-                    <h1 className="text-lg font-bold text-zinc-900 dark:text-zinc-50">Settings</h1>
                 </div>
             </header>
 
             <main className="mx-auto max-w-2xl px-6 py-10 space-y-6">
+                <h1 className="text-2xl font-bold text-zinc-900 dark:text-zinc-50">设置</h1>
+
                 <div className="rounded-xl border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-900">
                     <div className="mb-6">
-                        <h2 className="text-xl font-semibold text-zinc-900 dark:text-zinc-50">AI Configuration</h2>
+                        <h2 className="text-xl font-semibold text-zinc-900 dark:text-zinc-50">AI 配置</h2>
                         <div className="mt-2 rounded-lg bg-blue-50 p-4 text-sm text-blue-800 dark:bg-blue-900/20 dark:text-blue-300">
                             <p className="flex items-center gap-2 font-medium">
                                 <AlertCircle size={16} />
@@ -196,7 +197,7 @@ export default function SettingsPage() {
                     <form onSubmit={handleSubmit} className="flex flex-col gap-6">
                         <div>
                             <label className="mb-2 block text-sm font-medium text-zinc-700 dark:text-zinc-300">
-                                API Base URL
+                                API 地址 (Base URL)
                             </label>
                             <input
                                 type="text"
@@ -209,7 +210,7 @@ export default function SettingsPage() {
 
                         <div>
                             <label className="mb-2 block text-sm font-medium text-zinc-700 dark:text-zinc-300">
-                                API Key
+                                API 密钥 (Key)
                             </label>
                             <div className="relative">
                                 <input
@@ -272,13 +273,13 @@ export default function SettingsPage() {
                                 className="flex items-center gap-2 rounded-lg border border-zinc-200 bg-white px-4 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-50 disabled:opacity-50 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300"
                             >
                                 <Activity size={16} className={isTesting ? 'animate-pulse text-blue-500' : ''} />
-                                {isTesting ? 'Testing...' : 'Test Connection'}
+                                {isTesting ? '测试中...' : '测试连接'}
                             </button>
 
                             <div className="flex items-center gap-3">
                                 {saved && (
                                     <span className="text-sm font-medium text-green-600 dark:text-green-500">
-                                        Saved!
+                                        已保存!
                                     </span>
                                 )}
                                 <button
@@ -286,7 +287,7 @@ export default function SettingsPage() {
                                     className="flex items-center gap-2 rounded-lg bg-zinc-900 px-6 py-2 text-sm font-medium text-white hover:bg-zinc-700 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-300 transition-all shadow-sm active:scale-95"
                                 >
                                     <Save size={16} />
-                                    Save
+                                    保存
                                 </button>
                             </div>
                         </div>
@@ -298,7 +299,7 @@ export default function SettingsPage() {
                     <div className="mb-4">
                         <h2 className="flex items-center gap-2 text-xl font-semibold text-zinc-900 dark:text-zinc-50">
                             <MessageSquare size={20} />
-                            Test Chat
+                            测试对话
                         </h2>
                         <p className="mt-1 text-sm text-zinc-500">使用 Chat Model 发送测试消息。</p>
                     </div>
@@ -310,7 +311,7 @@ export default function SettingsPage() {
                                 value={chatInput}
                                 onChange={(e) => setChatInput(e.target.value)}
                                 onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && handleTestChat()}
-                                placeholder="Type a test message..."
+                                placeholder="输入测试消息..."
                                 className="flex-1 rounded-lg border border-zinc-200 bg-zinc-50 px-4 py-2 text-sm outline-none focus:border-blue-500 focus:bg-white dark:border-zinc-700 dark:bg-zinc-800 dark:focus:border-blue-500"
                                 disabled={isChatting || !formData.apiKey}
                             />
@@ -321,7 +322,7 @@ export default function SettingsPage() {
                                 className="flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-500 disabled:opacity-50 transition-colors"
                             >
                                 <Send size={16} />
-                                Send
+                                发送
                             </button>
                         </div>
 
