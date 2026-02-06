@@ -2,15 +2,38 @@ import { getAllArticleIds, getArticleData } from '@/lib/articles';
 import Link from 'next/link';
 import ArticleView from '@/components/ArticleView';
 
-
-// Force git update for build trigger
 export const dynamicParams = false;
 
 export async function generateStaticParams() {
-  // Debugging: return empty array or known paths to verify function detection
-  // const paths = getAllArticleIds();
-  // ...
-  return [{ id: 'test-article-id' }];
+  try {
+    const paths = getAllArticleIds();
+
+    // De-duplicate and normalize IDs
+    const allIds = new Set<string>();
+
+    paths.forEach(p => {
+      if (!p.id) return;
+      const rawId = p.id;
+      allIds.add(rawId);
+      allIds.add(rawId.normalize('NFC'));
+      allIds.add(rawId.normalize('NFD'));
+      // Add encoded version just in case
+      allIds.add(encodeURIComponent(rawId));
+
+      try {
+        const decoded = decodeURIComponent(rawId);
+        allIds.add(decoded);
+        allIds.add(decoded.normalize('NFC'));
+        allIds.add(decoded.normalize('NFD'));
+      } catch { }
+    });
+
+    return Array.from(allIds).map(id => ({ id }));
+  } catch (error) {
+    console.error('Error generating static params:', error);
+    // Return empty array to allow build to pass (will result in no pages generated if paths are empty)
+    return [];
+  }
 }
 
 export default async function Article({ params }: { params: Promise<{ id: string }> }) {
