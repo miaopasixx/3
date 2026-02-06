@@ -52,11 +52,24 @@ export function getSortedArticlesData(): Article[] {
 
             let date = '';
             const ctMatch = htmlContent.match(/var\s+ct\s*=\s*"(\d+)"/);
-            if (ctMatch) {
+            if (ctMatch && ctMatch[1]) {
                 date = new Date(parseInt(ctMatch[1]) * 1000).toISOString();
             } else {
-                const stats = fs.statSync(htmlPath);
-                date = stats.mtime.toISOString();
+                // 尝试从 <em id="publish_time">2026年1月4日 18:08</em> 提取
+                const publishTimeMatch = htmlContent.match(/<em[^>]*id="publish_time"[^>]*>(\d{4})年(\d{1,2})月(\d{1,2})日\s*(\d{1,2}):(\d{2})<\/em>/i);
+                if (publishTimeMatch) {
+                    const [, year, month, day, hour, minute] = publishTimeMatch;
+                    date = new Date(
+                        parseInt(year),
+                        parseInt(month) - 1,
+                        parseInt(day),
+                        parseInt(hour),
+                        parseInt(minute)
+                    ).toISOString();
+                } else {
+                    const stats = fs.statSync(htmlPath);
+                    date = stats.mtime.toISOString();
+                }
             }
 
             const encodedArticleId = encodeURIComponent(id);
@@ -133,11 +146,24 @@ export function getArticleData(articleId: string): ArticleData | null {
 
     let date = '';
     const ctMatch = htmlContent.match(/var\s+ct\s*=\s*"(\d+)"/);
-    if (ctMatch) {
+    if (ctMatch && ctMatch[1]) {
         date = new Date(parseInt(ctMatch[1]) * 1000).toISOString();
     } else {
-        const stats = fs.statSync(htmlPath);
-        date = stats.mtime.toISOString();
+        // 尝试从 <em id="publish_time">2026年1月4日 18:08</em> 提取
+        const publishTimeMatch = htmlContent.match(/<em[^>]*id="publish_time"[^>]*>(\d{4})年(\d{1,2})月(\d{1,2})日\s*(\d{1,2}):(\d{2})<\/em>/i);
+        if (publishTimeMatch) {
+            const [, year, month, day, hour, minute] = publishTimeMatch;
+            date = new Date(
+                parseInt(year),
+                parseInt(month) - 1,
+                parseInt(day),
+                parseInt(hour),
+                parseInt(minute)
+            ).toISOString();
+        } else {
+            const stats = fs.statSync(htmlPath);
+            date = stats.mtime.toISOString();
+        }
     }
 
     // Extract metadata

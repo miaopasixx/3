@@ -104,6 +104,30 @@ class WeixinArticleSaver:
         
         return title or 'untitled'
     
+    def extract_publish_time(self, soup):
+        """提取文章发布时间，返回 Unix 时间戳字符串"""
+        # 方式1: <em id="publish_time">2026年1月4日 18:08</em>
+        publish_time_elem = soup.find(id='publish_time')
+        if publish_time_elem:
+            time_text = publish_time_elem.get_text(strip=True)
+            # 解析 "2026年1月4日 18:08" 格式
+            match = re.match(r'(\d{4})年(\d{1,2})月(\d{1,2})日\s*(\d{1,2}):(\d{2})', time_text)
+            if match:
+                from datetime import datetime
+                year, month, day, hour, minute = map(int, match.groups())
+                dt = datetime(year, month, day, hour, minute)
+                timestamp = int(dt.timestamp())
+                return str(timestamp)
+        
+        # 方式2: var ct = "1234567890"
+        # (如果原始HTML中已有，直接用)
+        html_str = str(soup)
+        ct_match = re.search(r'var\s+ct\s*=\s*"(\d+)"', html_str)
+        if ct_match:
+            return ct_match.group(1)
+        
+        return None
+    
     def download_image(self, img_url, save_path, referer_url):
         """下载图片，处理防盗链"""
         try:
@@ -230,7 +254,7 @@ class WeixinArticleSaver:
         
         return soup
     
-    def create_standalone_html(self, soup, title):
+    def create_standalone_html(self, soup, title, publish_time=None):
         """创建独立的HTML文件，保留原始布局"""
         # 获取文章主体内容
         content_div = soup.find(id='js_content') or soup.find(class_='rich_media_content')
@@ -330,6 +354,7 @@ class WeixinArticleSaver:
         /* 原始样式 */
         {chr(10).join(styles)}
     </style>
+    <script>var ct = "{publish_time or ''}";</script>
 </head>
 <body>
     <div class="weixin-article-wrapper">
@@ -363,6 +388,11 @@ class WeixinArticleSaver:
         article_dir = os.path.join(self.output_dir, clean_title)
         os.makedirs(article_dir, exist_ok=True)
         
+        # 提取发布时间（在清理HTML之前）
+        publish_time = self.extract_publish_time(soup)
+        if publish_time:
+            print(f"发布时间戳: {publish_time}")
+        
         # 清理HTML
         soup = self.clean_html(soup)
         
@@ -372,7 +402,7 @@ class WeixinArticleSaver:
         print(f"共下载 {image_count} 张图片")
         
         # 创建独立HTML
-        final_html = self.create_standalone_html(soup, title)
+        final_html = self.create_standalone_html(soup, title, publish_time)
         
         # 保存HTML文件
         html_path = os.path.join(article_dir, f"{clean_title}.html")
