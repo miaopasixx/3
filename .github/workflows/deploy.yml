@@ -31,6 +31,18 @@ jobs:
     defaults:
       run:
         working-directory: ./web_app
+    services:
+      rsshub:
+        image: diygod/rsshub
+        ports:
+          - 1200:1200
+        env:
+          NODE_ENV: production
+          CACHE_TYPE: memory
+          PUPPETEER_SKIP_CHROMIUM_DOWNLOAD: 'true'
+          ANTICRAWLER_DELAY: '2000'
+          UA: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -57,6 +69,43 @@ jobs:
           node-version: "20"
           cache: ${{ steps.detect-package-manager.outputs.manager }}
           cache-dependency-path: ./web_app/package-lock.json
+
+      # --- Self-Healing: Fetch Articles Check ---
+      - name: Check for Articles
+        id: check_articles
+        run: |
+          if [ ! -d "weixin_articles" ] || [ -z "$(ls -A weixin_articles)" ]; then
+            echo "missing=true" >> $GITHUB_OUTPUT
+            echo "⚠️ Articles not found. Will fetch them."
+          else
+            echo "missing=false" >> $GITHUB_OUTPUT
+            echo "✅ Articles found."
+          fi
+
+      - name: Setup Python
+        if: steps.check_articles.outputs.missing == 'true'
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+          cache: 'pip'
+
+      - name: Install Python dependencies
+        if: steps.check_articles.outputs.missing == 'true'
+        run: |
+          pip install -r requirements.txt
+
+      - name: Wait for RSSHub
+        if: steps.check_articles.outputs.missing == 'true'
+        run: |
+          echo "Waiting for RSSHub container..."
+          timeout 60s bash -c 'until curl -s http://localhost:1200 > /dev/null; do sleep 5; done'
+          echo "✅ RSSHub is up and running!"
+
+      - name: Run sync script
+        if: steps.check_articles.outputs.missing == 'true'
+        run: python save_weixin_article.py --auto
+      # ------------------------------------------
+
       - name: Setup Pages
         uses: actions/configure-pages@v5
         with:
@@ -69,7 +118,7 @@ jobs:
         run: ${{ steps.detect-package-manager.outputs.manager }} ${{ steps.detect-package-manager.outputs.command }}
       - name: Build with Next.js
         # copy-assets.js is called in the build script in package.json
-        run: ${{ steps.detect-package-manager.outputs.runner }} next build
+        run: ${{ steps.detect-package-manager.outputs.manager }} run build
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
