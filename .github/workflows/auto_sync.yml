@@ -36,6 +36,11 @@ jobs:
           python-version: '3.9'
           cache: 'pip'
 
+      - name: Debug - List files
+        run: |
+          pwd
+          ls -la
+
       - name: Install dependencies
         run: |
           pip install -r requirements.txt
