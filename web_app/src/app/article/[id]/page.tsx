@@ -2,6 +2,8 @@ import { getAllArticleIds, getArticleData } from '@/lib/articles';
 import Link from 'next/link';
 import ArticleView from '@/components/ArticleView';
 
+
+// Force git update for build trigger
 export const dynamicParams = false;
 
 export async function generateStaticParams() {
