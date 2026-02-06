@@ -10,10 +10,8 @@ export async function generateStaticParams() {
     console.log(`[Build] Generating static params for ${paths.length} articles.`);
 
     if (paths.length === 0) {
-      console.warn('[Build] No articles found. Returning empty array.');
-      // When output: export is used, Next.js sometimes complains if a dynamic route 
-      // has 0 paths and dynamicParams is false. 
-      return [];
+      console.warn('[Build] No articles found. Returning fallback ID "init".');
+      return [{ id: 'init' }];
     }
 
     // De-duplicate and normalize IDs
@@ -40,13 +38,23 @@ export async function generateStaticParams() {
     return result;
   } catch (error) {
     console.error('Error generating static params:', error);
-    return [];
+    return [{ id: 'init' }];
   }
 }
 
 export default async function Article({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = await params;
   const id = resolvedParams.id;
+
+  if (id === 'init') {
+    return (
+      <div className="flex h-screen flex-col items-center justify-center gap-4 bg-zinc-950 text-white">
+        <h1 className="text-2xl font-bold text-red-500">文章库初始化中</h1>
+        <p className="text-zinc-500 text-center px-4">当前云端尚未抓取到文章数据。<br />请稍后刷新或检查自动同步任务建议。</p>
+        <Link href="/" className="px-4 py-2 bg-zinc-900 border border-zinc-800 rounded-lg hover:bg-zinc-800 transition-colors">返回首页</Link>
+      </div>
+    );
+  }
 
   // Try to find the article with the provided ID or its decoded version
   let articleData = await getArticleData(id);
