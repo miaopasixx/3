@@ -52,7 +52,7 @@ export async function ocrImageContent(
                 },
                 {
                     type: 'text',
-                    text: 'OCR this image. 识别并输出图中的文本。'
+                    text: '请识别图片中的所有文字内容，按原始布局输出。'
                 }
             ]
         }
