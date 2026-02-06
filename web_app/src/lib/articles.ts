@@ -81,7 +81,7 @@ export function getSortedArticlesData(): Article[] {
 
             const encodedArticleId = encodeURIComponent(id);
             const coverImageFile = files.find(f => f.match(/^image_1\.(jpeg|jpg|png|webp)$/i));
-            const coverImage = coverImageFile ? getPublicPath(`articles/${encodedArticleId}/${coverImageFile}`) : '';
+            const coverImage = coverImageFile ? `/articles/${encodedArticleId}/${coverImageFile}` : '';
 
             // Extract account metadata
             const nicknameMatch = htmlContent.match(/var\s+nickname\s*=\s*"([^"]+)"/) ||
@@ -189,7 +189,7 @@ export function getArticleData(articleId: string): ArticleData | null {
 
     const encodedArticleId = encodeURIComponent(decodedId);
     const coverImageFile = files.find(f => f.match(/^image_1\.(jpeg|jpg|png|webp)$/i));
-    const coverImage = coverImageFile ? getPublicPath(`articles/${encodedArticleId}/${coverImageFile}`) : '';
+    const coverImage = coverImageFile ? `/articles/${encodedArticleId}/${coverImageFile}` : '';
 
     // Extract only the core content to avoid double padding from the original wrapper
     const contentMatch = htmlContent.match(/<div[^>]*id="js_content"[^>]*>([\s\S]*?)<\/div>/i) ||
