@@ -501,9 +501,6 @@ export default function AIChatSidebar({ articleContent }: AIChatSidebarProps) {
                         </button>
                     )}
                 </div>
-                <Link href="/settings" title="配置">
-                    <Settings size={16} className="text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100" />
-                </Link>
             </div>
 
             {/* OCR Error */}
@@ -537,7 +534,7 @@ export default function AIChatSidebar({ articleContent }: AIChatSidebarProps) {
                                         <textarea
                                             value={editInput}
                                             onChange={(e) => setEditInput(e.target.value)}
-                                            className="w-full bg-transparent outline-none resize-none min-h-[60px] text-white"
+                                            className="w-full bg-transparent outline-none resize-none min-h-[60px] text-white scrollbar-hide"
                                             autoFocus
                                         />
                                         <div className="flex justify-end gap-2 border-t border-white/10 pt-2">
@@ -705,59 +702,61 @@ export default function AIChatSidebar({ articleContent }: AIChatSidebarProps) {
             </div>
 
             {/* OCR Results Panel */}
-            {showOcrPanel && (
-                <div className="absolute inset-0 z-50 flex flex-col bg-white dark:bg-zinc-950 animate-in slide-in-from-right duration-300">
-                    <div className="flex items-center justify-between border-b border-zinc-200 p-4 dark:border-zinc-800">
-                        <h3 className="font-semibold text-zinc-900 dark:text-zinc-100">图片识别详情</h3>
-                        <button
-                            onClick={() => setShowOcrPanel(false)}
-                            className="rounded-full p-1 hover:bg-zinc-100 dark:hover:bg-zinc-800"
-                        >
-                            <X size={20} className="text-zinc-500" />
-                        </button>
-                    </div>
-                    <div className="flex-1 overflow-y-auto p-4 space-y-4">
-                        {ocrResults.map((res, i) => (
-                            <div key={i} className="flex flex-col gap-2 rounded-xl border border-zinc-100 bg-zinc-50 p-3 dark:border-zinc-800 dark:bg-zinc-900/50">
-                                <div className="flex items-center justify-between">
-                                    <div className="flex items-center gap-2">
-                                        <button
-                                            onClick={() => setSelectedImageUrl(res.url)}
-                                            className="flex h-10 w-10 items-center justify-center overflow-hidden rounded bg-zinc-200 hover:opacity-80 transition-opacity dark:bg-zinc-800"
-                                            title="点击放大图片"
-                                        >
-                                            <img src={res.url} alt={`Img ${i + 1}`} className="h-full w-full object-cover" />
-                                        </button>
-                                        <span className="text-xs font-medium text-zinc-500">图片 {i + 1}</span>
-                                        {res.status === 'processing' && (
-                                            <Loader2 size={12} className="animate-spin text-blue-500" />
-                                        )}
-                                        {res.status === 'error' && (
-                                            <span className="text-[10px] text-red-500">{res.error}</span>
-                                        )}
-                                    </div>
-                                    <button
-                                        onClick={() => handleRetryOcr(i)}
-                                        disabled={res.status === 'processing'}
-                                        className="flex items-center gap-1 rounded bg-zinc-200 px-2 py-1 text-[10px] hover:bg-zinc-300 disabled:opacity-50 dark:bg-zinc-800 dark:hover:bg-zinc-700"
-                                        title="重新识别"
-                                    >
-                                        <RotateCw size={10} className={res.status === 'processing' ? 'animate-spin' : ''} />
-                                        <span>重试</span>
-                                    </button>
-                                </div>
-                                {res.text && (
-                                    <div className="mt-1 rounded border border-zinc-200 bg-white p-2 text-xs text-zinc-600 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-400 max-h-32 overflow-y-auto">
-                                        <div className="prose prose-xs dark:prose-invert">
-                                            <ReactMarkdown>{res.text}</ReactMarkdown>
+            {
+                showOcrPanel && (
+                    <div className="absolute inset-0 z-50 flex flex-col bg-white dark:bg-zinc-950 animate-in slide-in-from-right duration-300">
+                        <div className="flex items-center justify-between border-b border-zinc-200 p-4 dark:border-zinc-800">
+                            <h3 className="font-semibold text-zinc-900 dark:text-zinc-100">图片识别详情</h3>
+                            <button
+                                onClick={() => setShowOcrPanel(false)}
+                                className="rounded-full p-1 hover:bg-zinc-100 dark:hover:bg-zinc-800"
+                            >
+                                <X size={20} className="text-zinc-500" />
+                            </button>
+                        </div>
+                        <div className="flex-1 overflow-y-auto p-4 space-y-4">
+                            {ocrResults.map((res, i) => (
+                                <div key={i} className="flex flex-col gap-2 rounded-xl border border-zinc-100 bg-zinc-50 p-3 dark:border-zinc-800 dark:bg-zinc-900/50">
+                                    <div className="flex items-center justify-between">
+                                        <div className="flex items-center gap-2">
+                                            <button
+                                                onClick={() => setSelectedImageUrl(res.url)}
+                                                className="flex h-10 w-10 items-center justify-center overflow-hidden rounded bg-zinc-200 hover:opacity-80 transition-opacity dark:bg-zinc-800"
+                                                title="点击放大图片"
+                                            >
+                                                <img src={res.url} alt={`Img ${i + 1}`} className="h-full w-full object-cover" />
+                                            </button>
+                                            <span className="text-xs font-medium text-zinc-500">图片 {i + 1}</span>
+                                            {res.status === 'processing' && (
+                                                <Loader2 size={12} className="animate-spin text-blue-500" />
+                                            )}
+                                            {res.status === 'error' && (
+                                                <span className="text-[10px] text-red-500">{res.error}</span>
+                                            )}
                                         </div>
+                                        <button
+                                            onClick={() => handleRetryOcr(i)}
+                                            disabled={res.status === 'processing'}
+                                            className="flex items-center gap-1 rounded bg-zinc-200 px-2 py-1 text-[10px] hover:bg-zinc-300 disabled:opacity-50 dark:bg-zinc-800 dark:hover:bg-zinc-700"
+                                            title="重新识别"
+                                        >
+                                            <RotateCw size={10} className={res.status === 'processing' ? 'animate-spin' : ''} />
+                                            <span>重试</span>
+                                        </button>
                                     </div>
-                                )}
-                            </div>
-                        ))}
+                                    {res.text && (
+                                        <div className="mt-1 rounded border border-zinc-200 bg-white p-2 text-xs text-zinc-600 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-400 max-h-32 overflow-y-auto">
+                                            <div className="prose prose-xs dark:prose-invert">
+                                                <ReactMarkdown>{res.text}</ReactMarkdown>
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            ))}
+                        </div>
                     </div>
-                </div>
-            )}
+                )
+            }
 
             {/* Image Zoom Modal */}
             {selectedImageUrl && (

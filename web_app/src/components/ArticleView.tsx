@@ -19,7 +19,7 @@ interface ArticleViewProps {
 }
 
 export default function ArticleView({ articleData }: ArticleViewProps) {
-    const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+    const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(true);
     const [activeTocId, setActiveTocId] = useState<string | null>(null);
     const [isTocVisible, setIsTocVisible] = useState(true);
     const observer = useRef<IntersectionObserver | null>(null);
