@@ -92,7 +92,7 @@ jobs:
       - name: Install Python dependencies
         if: steps.check_articles.outputs.missing == 'true'
         run: |
-          pip install -r requirements.txt
+          pip install -r ../requirements.txt
 
       - name: Wait for RSSHub
         if: steps.check_articles.outputs.missing == 'true'
@@ -103,7 +103,7 @@ jobs:
 
       - name: Run sync script
         if: steps.check_articles.outputs.missing == 'true'
-        run: python save_weixin_article.py --auto
+        run: python ../save_weixin_article.py --auto --config ../config.json --history ../downloaded_history.json
       # ------------------------------------------
 
       - name: Setup Pages
