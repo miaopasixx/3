@@ -74,9 +74,9 @@ jobs:
       - name: Check for Articles
         id: check_articles
         run: |
-          if [ ! -d "weixin_articles" ] || [ -z "$(ls -A weixin_articles)" ]; then
+          if [ ! -d "../weixin_articles" ] || [ -z "$(ls -A ../weixin_articles 2>/dev/null)" ]; then
             echo "missing=true" >> $GITHUB_OUTPUT
-            echo "⚠️ Articles not found. Will fetch them."
+            echo "⚠️ Articles not found at ../weixin_articles. Will fetch them."
           else
             echo "missing=false" >> $GITHUB_OUTPUT
             echo "✅ Articles found."
@@ -103,7 +103,7 @@ jobs:
 
       - name: Run sync script
         if: steps.check_articles.outputs.missing == 'true'
-        run: python ../save_weixin_article.py --auto --config ../config.json --history ../downloaded_history.json
+        run: python ../save_weixin_article.py --auto --config ../config.json --history ../downloaded_history.json --output ../weixin_articles
       # ------------------------------------------
 
       - name: Setup Pages

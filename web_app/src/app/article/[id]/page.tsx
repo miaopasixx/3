@@ -7,6 +7,14 @@ export const dynamicParams = false;
 export async function generateStaticParams() {
   try {
     const paths = getAllArticleIds();
+    console.log(`[Build] Generating static params for ${paths.length} articles.`);
+
+    if (paths.length === 0) {
+      console.warn('[Build] No articles found. Returning empty array.');
+      // When output: export is used, Next.js sometimes complains if a dynamic route 
+      // has 0 paths and dynamicParams is false. 
+      return [];
+    }
 
     // De-duplicate and normalize IDs
     const allIds = new Set<string>();
@@ -15,10 +23,9 @@ export async function generateStaticParams() {
       if (!p.id) return;
       const rawId = p.id;
       allIds.add(rawId);
+      // Normalize to handle potential OS differences in file naming/encoding
       allIds.add(rawId.normalize('NFC'));
       allIds.add(rawId.normalize('NFD'));
-      // Add encoded version just in case
-      allIds.add(encodeURIComponent(rawId));
 
       try {
         const decoded = decodeURIComponent(rawId);
@@ -28,10 +35,11 @@ export async function generateStaticParams() {
       } catch { }
     });
 
-    return Array.from(allIds).map(id => ({ id }));
+    const result = Array.from(allIds).map(id => ({ id }));
+    console.log(`[Build] Final static params count: ${result.length}`);
+    return result;
   } catch (error) {
     console.error('Error generating static params:', error);
-    // Return empty array to allow build to pass (will result in no pages generated if paths are empty)
     return [];
   }
 }
