@@ -25,10 +25,10 @@ export const DEFAULT_CONFIG: ChatConfig = {
 };
 
 /**
- * Call OCR model to extract text from images
+ * Call OCR model to extract text from a single image
  */
 export async function ocrImageContent(
-    imageUrls: string[],
+    imageUrl: string,
     config: ChatConfig
 ): Promise<string> {
     const { apiKey, baseUrl, ocrModel } = config;
@@ -37,24 +37,25 @@ export async function ocrImageContent(
         throw new Error('API Key is missing');
     }
 
-    if (imageUrls.length === 0) {
+    if (!imageUrl) {
         return '';
     }
 
-    // Build message content with images
-    const content: MessageContent[] = [
-        { type: 'text', text: 'Please extract and transcribe all text content from the following images. Return only the extracted text, no explanations.' },
-    ];
-
-    for (const url of imageUrls) {
-        content.push({
-            type: 'image_url',
-            image_url: { url }
-        });
-    }
-
-    const messages: Message[] = [
-        { role: 'user', content }
+    // Standard Vision format: Image then Text
+    const messages: any[] = [
+        {
+            role: 'user',
+            content: [
+                {
+                    type: 'image_url',
+                    image_url: { url: imageUrl }
+                },
+                {
+                    type: 'text',
+                    text: 'OCR this image. 识别并输出图中的文本。'
+                }
+            ]
+        }
     ];
 
     const response = await fetch(`${baseUrl}/chat/completions`, {
@@ -66,7 +67,7 @@ export async function ocrImageContent(
         body: JSON.stringify({
             model: ocrModel,
             messages,
-            max_tokens: 8192,
+            max_tokens: 1024,
             temperature: 0.1,
         }),
     });
@@ -75,11 +76,11 @@ export async function ocrImageContent(
         let errorMessage = `OCR API Error: ${response.status} ${response.statusText}`;
         try {
             const errorData = await response.json();
-            errorMessage = errorData.message || errorMessage;
+            errorMessage = errorData.message || errorData.error?.message || errorMessage;
         } catch (e) {
             // Keep default error
         }
-        throw new Error(errorMessage);
+        throw new Error(`${errorMessage} (Image: ${imageUrl.substring(0, 100)}${imageUrl.length > 100 ? '...' : ''})`);
     }
 
     const data = await response.json();
@@ -91,7 +92,8 @@ export async function ocrImageContent(
  */
 export async function chatCompletion(
     messages: Message[],
-    config: ChatConfig
+    config: ChatConfig,
+    signal?: AbortSignal
 ): Promise<ReadableStream<Uint8Array>> {
     const { apiKey, baseUrl, chatModel } = config;
 
@@ -111,6 +113,7 @@ export async function chatCompletion(
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${apiKey}`,
         },
+        signal,
         body: JSON.stringify({
             model: chatModel,
             messages: simpleMessages,
