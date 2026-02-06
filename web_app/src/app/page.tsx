@@ -23,11 +23,11 @@ export default function Home() {
             {/* Logo Badge */}
             <div className="relative group">
               <div className="absolute -inset-1 rounded-xl bg-gradient-to-br from-yellow-300 to-red-600 opacity-75 blur transition duration-500 group-hover:opacity-100" />
-              <div className="relative h-10 w-10 rounded-xl overflow-hidden bg-white shadow-xl flex items-center justify-center border border-yellow-500/30">
+              <div className="relative h-10 w-10 rounded-xl overflow-hidden shadow-xl flex items-center justify-center border border-yellow-500/30">
                 <img
                   src={`${process.env.NODE_ENV === 'production' ? '/3' : ''}/favicon.png`}
                   alt="Logo"
-                  className="h-full w-full object-cover"
+                  className="h-full w-full object-cover mix-blend-multiply dark:mix-blend-screen"
                 />
               </div>
             </div>
