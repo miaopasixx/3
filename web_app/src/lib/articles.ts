@@ -117,11 +117,18 @@ export function getSortedArticlesData(): Article[] {
 
 export function getAllArticleIds() {
     if (!fs.existsSync(articlesDirectory)) {
+        console.warn(`Articles directory not found at ${articlesDirectory}. Returning empty paths for build.`);
         return [];
     }
     const fileNames = fs.readdirSync(articlesDirectory);
     return fileNames
-        .filter(fileName => fs.statSync(path.join(articlesDirectory, fileName)).isDirectory())
+        .filter(fileName => {
+            try {
+                return fs.statSync(path.join(articlesDirectory, fileName)).isDirectory();
+            } catch {
+                return false;
+            }
+        })
         .map(fileName => {
             return {
                 id: fileName
