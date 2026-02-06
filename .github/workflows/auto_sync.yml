@@ -36,14 +36,22 @@ jobs:
           python-version: '3.9'
           cache: 'pip'
 
-      - name: Debug - List files
-        run: |
-          pwd
-          ls -la
-
       - name: Install dependencies
         run: |
-          pip install -r requirements.txt
+          echo "Current working directory: $(pwd)"
+          
+          # Try to find requirements.txt
+          REQ_FILE=$(find . -name "requirements.txt" | head -n 1)
+          
+          if [ -n "$REQ_FILE" ]; then
+            echo "Found requirements.txt at: $REQ_FILE"
+            pip install -r "$REQ_FILE"
+          else
+            echo "❌ ERROR: requirements.txt not found!"
+            echo "Directory structure:"
+            ls -R
+            exit 1
+          fi
 
       - name: Wait for RSSHub to be ready
         run: |
