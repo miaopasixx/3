@@ -3,6 +3,13 @@ import path from 'path';
 
 const articlesDirectory = path.join(process.cwd(), 'public', 'articles');
 
+// Get base path from environment or default to empty
+const getPublicPath = (p: string) => {
+    const basePath = process.env.NODE_ENV === 'production' ? '/3' : '';
+    const cleanPath = p.startsWith('/') ? p : `/${p}`;
+    return `${basePath}${cleanPath}`;
+};
+
 export interface Article {
     id: string;
     title: string;
@@ -74,7 +81,7 @@ export function getSortedArticlesData(): Article[] {
 
             const encodedArticleId = encodeURIComponent(id);
             const coverImageFile = files.find(f => f.match(/^image_1\.(jpeg|jpg|png|webp)$/i));
-            const coverImage = coverImageFile ? `/articles/${encodedArticleId}/${coverImageFile}` : '';
+            const coverImage = coverImageFile ? getPublicPath(`articles/${encodedArticleId}/${coverImageFile}`) : '';
 
             // Extract account metadata
             const nicknameMatch = htmlContent.match(/var\s+nickname\s*=\s*"([^"]+)"/) ||
@@ -92,7 +99,7 @@ export function getSortedArticlesData(): Article[] {
                 title,
                 date,
                 coverImage,
-                url: `/article/${id}`,
+                url: `/article/${encodeURIComponent(id)}`,
                 accountName,
                 author,
                 isOriginal
@@ -182,7 +189,7 @@ export function getArticleData(articleId: string): ArticleData | null {
 
     const encodedArticleId = encodeURIComponent(decodedId);
     const coverImageFile = files.find(f => f.match(/^image_1\.(jpeg|jpg|png|webp)$/i));
-    const coverImage = coverImageFile ? `/articles/${encodedArticleId}/${coverImageFile}` : '';
+    const coverImage = coverImageFile ? getPublicPath(`articles/${encodedArticleId}/${coverImageFile}`) : '';
 
     // Extract only the core content to avoid double padding from the original wrapper
     const contentMatch = htmlContent.match(/<div[^>]*id="js_content"[^>]*>([\s\S]*?)<\/div>/i) ||
@@ -286,7 +293,7 @@ export function getArticleData(articleId: string): ArticleData | null {
             if (src.startsWith('http') || src.startsWith('data:') || src.startsWith('/')) {
                 return m;
             }
-            return `${attr}="/articles/${encodedArticleId}/${src}"`;
+            return `${attr}="${getPublicPath(`articles/${encodedArticleId}/${src}`)}"`;
         });
 
         return `<img${newAttrs}>`;
@@ -297,7 +304,7 @@ export function getArticleData(articleId: string): ArticleData | null {
         title,
         date,
         coverImage,
-        url: `/article/${articleId}`,
+        url: `/article/${encodeURIComponent(decodedId)}`,
         contentHtml: finalContent,
         accountName,
         author,

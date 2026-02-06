@@ -49,6 +49,7 @@ jobs:
       - name: Run sync script
         run: python save_weixin_article.py --auto
 
+
       - name: Commit and Push changes
         if: always()
         run: |
@@ -61,24 +62,3 @@ jobs:
             git commit -m "chore: auto sync new articles [skip ci]"
             git push
           fi
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: 20
-          cache: 'npm'
-          cache-dependency-path: web_app/package-lock.json
-
-      - name: Install and Build Web App
-        working-directory: ./web_app
-        run: |
-          npm ci
-          npm run build
-
-      - name: Deploy to GitHub Pages
-        uses: peaceiris/actions-gh-pages@v3
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./web_app/out
-          publish_branch: gh-pages
-          commit_message: "deploy: update web app [skip ci]"
