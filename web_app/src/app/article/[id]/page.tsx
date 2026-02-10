@@ -5,41 +5,26 @@ import ArticleView from '@/components/ArticleView';
 export const dynamicParams = false;
 
 export async function generateStaticParams() {
-  try {
-    const paths = getAllArticleIds();
-    console.log(`[Build] Generating static params for ${paths.length} articles.`);
+  const paths = getAllArticleIds();
 
-    if (paths.length === 0) {
-      console.warn('[Build] No articles found. Returning fallback ID "init".');
-      return [{ id: 'init' }];
-    }
-
-    // De-duplicate and normalize IDs
-    const allIds = new Set<string>();
-
-    paths.forEach(p => {
-      if (!p.id) return;
-      const rawId = p.id;
-      allIds.add(rawId);
-      // Normalize to handle potential OS differences in file naming/encoding
-      allIds.add(rawId.normalize('NFC'));
-      allIds.add(rawId.normalize('NFD'));
-
-      try {
-        const decoded = decodeURIComponent(rawId);
-        allIds.add(decoded);
-        allIds.add(decoded.normalize('NFC'));
-        allIds.add(decoded.normalize('NFD'));
-      } catch { }
-    });
-
-    const result = Array.from(allIds).map(id => ({ id }));
-    console.log(`[Build] Final static params count: ${result.length}`);
-    return result;
-  } catch (error) {
-    console.error('Error generating static params:', error);
+  if (paths.length === 0) {
     return [{ id: 'init' }];
   }
+
+  const params: { id: string }[] = [];
+
+  for (const path of paths) {
+    // Add raw ID
+    params.push({ id: path.id });
+
+    // Add encoded ID to ensure matching works regardless of how the URL is presented
+    const encoded = encodeURIComponent(path.id);
+    if (encoded !== path.id) {
+      params.push({ id: encoded });
+    }
+  }
+
+  return params;
 }
 
 export default async function Article({ params }: { params: Promise<{ id: string }> }) {
