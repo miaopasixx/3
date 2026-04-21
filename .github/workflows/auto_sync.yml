@@ -2,10 +2,9 @@ name: Auto Sync WeChat Articles
 
 on:
   push:
-    branches: ["main"]
+    branches: [ "main" ]
   schedule:
-    # 触发日期：5/10/15/28/29/30/31号（实际执行由脚本判断）
-    - cron: '0 14 5,10,15,28,29,30,31 * *'
+    - cron: '0 14 */3 * *'
   workflow_dispatch:
 
 jobs:
@@ -24,6 +23,7 @@ jobs:
           CACHE_TYPE: memory
           PUPPETEER_SKIP_CHROMIUM_DOWNLOAD: 'true'
           ANTICRAWLER_DELAY: '2000'
+          # 设置全局 UA，尝试规避拦截
           UA: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
 
     steps:
@@ -38,18 +38,13 @@ jobs:
 
       - name: Install dependencies
         run: |
-          REQ_FILE=$(find . -name "requirements.txt" | head -n 1)
-          if [ -n "$REQ_FILE" ]; then
-            pip install -r "$REQ_FILE"
-          else
-            echo "❌ requirements.txt not found!"
-            ls -R
-            exit 1
-          fi
+          pip install -r requirements.txt
 
-      - name: Wait for RSSHub
+      - name: Wait for RSSHub to be ready
         run: |
+          echo "Waiting for RSSHub container..."
           timeout 60s bash -c 'until curl -s http://localhost:1200 > /dev/null; do sleep 5; done'
+          echo "✅ RSSHub is up and running!"
 
       - name: Run sync script
         run: python save_weixin_article.py --auto
@@ -60,7 +55,30 @@ jobs:
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
           git add .
-          if ! git diff --staged --quiet; then
-            git commit -m "chore: auto sync [skip ci]"
+          if git diff --staged --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "chore: auto sync new articles [skip ci]"
             git push
           fi
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 20
+          cache: 'npm'
+          cache-dependency-path: web_app/package-lock.json
+
+      - name: Install and Build Web App
+        working-directory: ./web_app
+        run: |
+          npm ci
+          npm run build
+
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./web_app/out
+          publish_branch: gh-pages
+          commit_message: "deploy: update web app [skip ci]"
