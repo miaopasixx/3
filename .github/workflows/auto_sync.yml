@@ -2,9 +2,10 @@ name: Auto Sync WeChat Articles
 
 on:
   push:
-    branches: [ "main" ]
+    branches: ["main"]
   schedule:
-    - cron: '0 14 */3 * *'
+    # 触发日期：5/10/15/28/29/30/31号（实际执行由脚本判断）
+    - cron: '0 14 5,10,15,28,29,30,31 * *'
   workflow_dispatch:
 
 jobs:
@@ -23,7 +24,6 @@ jobs:
           CACHE_TYPE: memory
           PUPPETEER_SKIP_CHROMIUM_DOWNLOAD: 'true'
           ANTICRAWLER_DELAY: '2000'
-          # 设置全局 UA，尝试规避拦截
           UA: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
 
     steps:
@@ -38,30 +38,21 @@ jobs:
 
       - name: Install dependencies
         run: |
-          echo "Current working directory: $(pwd)"
-          
-          # Try to find requirements.txt
           REQ_FILE=$(find . -name "requirements.txt" | head -n 1)
-          
           if [ -n "$REQ_FILE" ]; then
-            echo "Found requirements.txt at: $REQ_FILE"
             pip install -r "$REQ_FILE"
           else
-            echo "❌ ERROR: requirements.txt not found!"
-            echo "Directory structure:"
+            echo "❌ requirements.txt not found!"
             ls -R
             exit 1
           fi
 
-      - name: Wait for RSSHub to be ready
+      - name: Wait for RSSHub
         run: |
-          echo "Waiting for RSSHub container..."
           timeout 60s bash -c 'until curl -s http://localhost:1200 > /dev/null; do sleep 5; done'
-          echo "✅ RSSHub is up and running!"
 
       - name: Run sync script
         run: python save_weixin_article.py --auto
-
 
       - name: Commit and Push changes
         if: always()
@@ -69,9 +60,7 @@ jobs:
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
           git add .
-          if git diff --staged --quiet; then
-            echo "No changes to commit"
-          else
-            git commit -m "chore: auto sync new articles [skip ci]"
+          if ! git diff --staged --quiet; then
+            git commit -m "chore: auto sync [skip ci]"
             git push
           fi
