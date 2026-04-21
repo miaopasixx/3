@@ -6,30 +6,36 @@
 解决跨域问题：通过模拟浏览器请求头来绕过微信的防盗链机制
 """
 
+# pyright: reportMissingTypeStubs=false, reportUnknownParameterType=false, reportUnknownArgumentType=false, reportUnknownVariableType=false, reportUnknownMemberType=false, reportAny=false, reportUnusedCallResult=false, reportAttributeAccessIssue=false
+
 import os
 import re
 import sys
 import time
 import json
 import certifi
-from typing import Optional, Dict, List, Any
+from typing import Optional, Dict, List, Any, cast, cast
 
 import requests
 import feedparser
+from feedparser import FeedParserDict
 from bs4 import BeautifulSoup
 from urllib.parse import urlparse
 import argparse
 
 # Fix SSL certificate issue on Windows
-os.environ['SSL_CERT_FILE'] = certifi.where()
+os.environ["SSL_CERT_FILE"] = certifi.where()
+
+
+class WeixinArticleSaver:
     """微信公众号文章保存器"""
 
-    def __init__(self, output_dir="weixin_articles"):
-        self.output_dir = output_dir
+    def __init__(self, output_dir: str = "weixin_articles"):
+        self.output_dir: str = output_dir
         self.session = requests.Session()
 
         # 设置请求头，模拟浏览器访问，解决跨域和防盗链问题
-        self.headers = {
+        self.headers: Dict[str, str] = {
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
             "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
             "Accept-Language": "zh-CN,zh;q=0.9,en;q=0.8",
@@ -40,7 +46,7 @@ os.environ['SSL_CERT_FILE'] = certifi.where()
         }
 
         # 图片请求头，关键是设置 Referer 来绕过防盗链
-        self.image_headers = {
+        self.image_headers: Dict[str, str] = {
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
             "Accept": "image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8",
             "Accept-Language": "zh-CN,zh;q=0.9,en;q=0.8",
@@ -51,8 +57,8 @@ os.environ['SSL_CERT_FILE'] = certifi.where()
 
         self.session.headers.update(self.headers)
 
-    def clean_filename(self, filename):
-        """清理文件名，移除非法字符"""
+    def clean_filename(self, filename: str) -> str:
+        """清理文件名,移除非法字符"""
         # 移除或替换非法字符
         illegal_chars = r'[<>:"/\\|?*]'
         filename = re.sub(illegal_chars, "_", filename)
@@ -63,7 +69,7 @@ os.environ['SSL_CERT_FILE'] = certifi.where()
             filename = filename[:100]
         return filename or "untitled"
 
-    def get_article_content(self, url):
+    def get_article_content(self, url: str) -> Optional[str]:
         """获取文章内容"""
         print(f"正在获取文章: {url}")
 
@@ -80,10 +86,10 @@ os.environ['SSL_CERT_FILE'] = certifi.where()
             traceback.print_exc()
             return None
 
-    def extract_title(self, soup):
+    def extract_title(self, soup: Any) -> str:
         """提取文章标题"""
         # 尝试多种方式获取标题
-        title = None
+        title: Optional[str] = None
 
         # 方式1: meta property="og:title"
         og_title = soup.find("meta", property="og:title")
@@ -110,7 +116,7 @@ os.environ['SSL_CERT_FILE'] = certifi.where()
 
         return title or "untitled"
 
-    def extract_publish_time(self, soup):
+    def extract_publish_time(self, soup: Any) -> Optional[str]:
         """提取文章发布时间，返回 Unix 时间戳字符串"""
         # 方式1: <em id="publish_time">2026年1月4日 18:08</em>
         publish_time_elem = soup.find(id="publish_time")
@@ -137,7 +143,7 @@ os.environ['SSL_CERT_FILE'] = certifi.where()
 
         return None
 
-    def download_image(self, img_url, save_path, referer_url):
+    def download_image(self, img_url: str, save_path: str, referer_url: str) -> bool:
         """下载图片，处理防盗链"""
         try:
             # 处理相对URL
@@ -157,9 +163,6 @@ os.environ['SSL_CERT_FILE'] = certifi.where()
             )
             response.raise_for_status()
 
-            # 检查内容类型
-            content_type = response.headers.get("Content-Type", "")
-
             with open(save_path, "wb") as f:
                 for chunk in response.iter_content(chunk_size=8192):
                     if chunk:
@@ -170,10 +173,10 @@ os.environ['SSL_CERT_FILE'] = certifi.where()
             print(f"  下载图片失败 {img_url}: {e}")
             return False
 
-    def process_images(self, soup, article_dir, article_url):
+    def process_images(self, soup: Any, article_dir: str, article_url: str) -> int:
         """处理文章中的所有图片"""
         images = soup.find_all("img")
-        image_map = {}  # 原始URL -> 本地路径
+        image_map: Dict[str, str] = {}  # 原始URL -> 本地路径
         image_count = 0
 
         for img in images:
@@ -231,7 +234,7 @@ os.environ['SSL_CERT_FILE'] = certifi.where()
 
         return image_count
 
-    def clean_html(self, soup):
+    def clean_html(self, soup: Any) -> Any:
         """清理HTML，移除不必要的元素"""
         # 移除脚本
         for script in soup.find_all("script"):
@@ -271,7 +274,9 @@ os.environ['SSL_CERT_FILE'] = certifi.where()
 
         return soup
 
-    def create_standalone_html(self, soup, title, publish_time=None):
+    def create_standalone_html(
+        self, soup: Any, title: str, publish_time: Optional[str] = None
+    ) -> str:
         """创建独立的HTML文件，保留原始布局"""
         # 获取文章主体内容
         content_div = soup.find(id="js_content") or soup.find(
@@ -411,7 +416,7 @@ os.environ['SSL_CERT_FILE'] = certifi.where()
 
         return html_template
 
-    def save_article(self, url):
+    def save_article(self, url: str) -> bool:
         """保存文章到本地"""
         # 获取文章内容
         html_content = self.get_article_content(url)
@@ -462,17 +467,19 @@ class WeixinAutoMonitor:
     """微信公众号自动监控器"""
 
     def __init__(
-        self, config_path="config.json", history_path="downloaded_history.json"
+        self,
+        config_path: str = "config.json",
+        history_path: str = "downloaded_history.json",
     ):
-        self.config_path = config_path
-        self.history_path = history_path
-        self.config = self.load_config()
-        self.history = self.load_history()
+        self.config_path: str = config_path
+        self.history_path: str = history_path
+        self.config: Dict[str, Any] = self.load_config()
+        self.history: Dict[str, List[str]] = self.load_history()
         self.saver = WeixinArticleSaver(
             output_dir=self.config.get("output_dir", "weixin_articles")
         )
 
-    def load_config(self):
+    def load_config(self) -> Dict[str, Any]:
         """加载配置文件"""
         try:
             if os.path.exists(self.config_path):
@@ -483,7 +490,7 @@ class WeixinAutoMonitor:
             print(f"加载配置失败: {e}")
             return {}
 
-    def load_history(self):
+    def load_history(self) -> Dict[str, List[str]]:
         """加载历史记录"""
         try:
             if os.path.exists(self.history_path):
@@ -494,7 +501,7 @@ class WeixinAutoMonitor:
             print(f"加载历史记录失败: {e}")
             return {"downloaded_urls": []}
 
-    def save_history(self):
+    def save_history(self) -> None:
         """保存历史记录"""
         try:
             with open(self.history_path, "w", encoding="utf-8") as f:
@@ -502,20 +509,20 @@ class WeixinAutoMonitor:
         except Exception as e:
             print(f"保存历史记录失败: {e}")
 
-    def check_and_download(self):
+    def check_and_download(self) -> None:
         """检查更新并下载新文章"""
-        rsshub_base = self.config.get("rsshub_base_url", "http://localhost:1200")
-        accounts = self.config.get("accounts", [])
+        rsshub_base: str = self.config.get("rsshub_base_url", "http://localhost:1200")
+        accounts: List[Dict[str, Any]] = self.config.get("accounts", [])
 
         if not accounts:
             print("❌ 配置文件中未找到公众号列表")
             return
 
         for account in accounts:
-            name = account.get("name", "Unknown")
-            biz = account.get("biz")
+            name: str = account.get("name", "Unknown")
+            biz: Optional[str] = account.get("biz")
             # 支持直接配置 RSS URL
-            rss_url = account.get("rss_url")
+            rss_url: Optional[str] = account.get("rss_url")
 
             if not rss_url:
                 if not biz:
@@ -542,7 +549,8 @@ class WeixinAutoMonitor:
 
                 new_articles_count = 0
                 for entry in feed.entries:
-                    url = entry.link
+                    entry = cast(FeedParserDict, entry)
+                    url = str(entry.link)
                     clean_url = url.split("&")[0] if "mp.weixin.qq.com" in url else url
 
                     if clean_url in self.history["downloaded_urls"]:
@@ -553,7 +561,7 @@ class WeixinAutoMonitor:
                     if keywords:
                         match = any(kw in entry.title for kw in keywords)
                         if not match:
-                            # 如果是初始化模式，我们也把不匹配的也记录为“已阅”，避免以后多余检查
+                            # 如果是初始化模式，我们也把不匹配的也记录为"已阅"，避免以后多余检查
                             if self.config.get("init_only", False):
                                 self.history["downloaded_urls"].append(clean_url)
                             continue
@@ -587,7 +595,7 @@ class WeixinAutoMonitor:
                 print(f"  💥 处理公众号 {name} 时出错: {e}")
 
 
-def main():
+def main() -> None:
     parser = argparse.ArgumentParser(
         description="微信公众号文章保存工具 - 将微信公众号文章保存到本地",
         formatter_class=argparse.RawDescriptionHelpFormatter,
